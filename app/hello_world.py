@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import numpy as np
 import cv2
 import sys
+import argparse
 
 def hello(file_name):
     img = cv2.imread(file_name, 1)
@@ -11,5 +11,8 @@ def hello(file_name):
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    file_name = sys.argv[1]
-    hello(file_name)
+    PARSER = argparse.ArgumentParser()
+    PARSER.add_argument(dest='image_file')
+    ARGS = PARSER.parse_args()
+    hello(ARGS.image_file)
+
