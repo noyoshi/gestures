@@ -1,0 +1,19 @@
+1. Need to build 3 classifiers with using same / different features (1 per
+person)
+
+2. What features are we looking for? 
+- What fingers are held up 
+- Distance of fingertip to the center of the hand 
+- Which of the 5 fingers are being held up
+
+- Derive thresholds (area ratio, angle, distance from middle, number of
+  defects, (maybe also the skin threshold?)) from trianing?
+
+- Classifiers:
+1. Number of defects
+2. Number of defects AND area ratio
+3. Number of defects, area ratio, and the 
+
+Use an SVM to classify the methods using multiple features?
+
+- We could also use HoG as a feature descriptor?
