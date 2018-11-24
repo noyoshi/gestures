@@ -17,3 +17,10 @@ person)
 Use an SVM to classify the methods using multiple features?
 
 - We could also use HoG as a feature descriptor?
+
+- We can also use the "hand" region we determine and figure out the distance
+  between boundry pixels and the center 
+  - We then use this histogram of distance and put it into bins (36?)
+  - Then, we can use this vector as a feature and input it into a SVM?
+  -* we would want to just get the outline of the hand, and we would also want
+  to fill in anything in this outline
