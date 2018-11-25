@@ -71,7 +71,7 @@ def convex_hull_classifier(filtered_img, og_img):
 
         #distance between point and convex hull
         d=(2*ar)/a
-        print(ar, d)
+        # print(ar, d)
 
         # apply cosine rule here
         angle = math.acos((b**2 + c**2 - a**2)/(2*b*c)) * 57
@@ -110,7 +110,7 @@ def convex_hull_classifier(filtered_img, og_img):
     elif l==5:
         cv2.putText(og_img,'5',(0,50), font, 2, (0,0,255), 3, cv2.LINE_AA)
     ''' 
-    
+
     elif l==6:
         cv2.putText(og_img,'reposition',(0,50), font, 2, (0,0,255), 3, cv2.LINE_AA)
     else :

@@ -1,0 +1,6 @@
+defects,arearatio,distance,label
+4,50,31,ok
+1,47,33,shaka
+1,25,15,thumbsup
+3,55,4,rockon
+3,46,6,peace
