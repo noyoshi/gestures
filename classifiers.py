@@ -61,6 +61,8 @@ class Classifiers(object):
             print("\tModel: {}".format(name))
             print("\tPredictions: ")
             print("\t" + ', '.join(predictions))
+            print("\tTrue Gestures: ")
+            print("\t" + ', '.join(self.test_label))
             print("\tF1: {}".format(f1))
 
 if __name__ == '__main__':
