@@ -2,11 +2,27 @@ import cv2
 import numpy as np
 import copy
 import math
+import sys
+import os
 
-# Instructions
-# press 'b' to capture the background model (No Hand!)
-# press 'r' to reset the backgroud model
-# press 'ESC' to exit
+if len(sys.argv) < 3:
+    print("Please give the destination file and file template name next time") 
+    sys.exit(1)
+
+dest_dir, file_name = sys.argv[1:]
+dir_path = os.path.dirname(os.path.realpath(__file__))
+if dest_dir[0] != "/":
+    dest_dir = "/" + dest_dir
+
+if dest_dir[-1] != "/":
+    dest_dir += "/"
+
+OUTPUT_TEMPLATE = dir_path + dest_dir + file_name + "-{}.jpg" 
+print("Outputting to \n{}\n\tCorrect? [y/n]".format(OUTPUT_TEMPLATE))
+x = input()
+x = x.strip().lower()
+if x != "y":
+    sys.exit(1)
 
 # Global Parameters
 cap_region_x_begin = 0.5  	# Start Point / Total Width
@@ -21,11 +37,7 @@ isBgCaptured = 0   			# Whether the Background is Captured
 
 # Remove Background from Frame using Model Built by BackgroundSubtractorMOG2
 def removeBG(frame):
-	# Build a BG Subtractor Model
     fgmask = bgModel.apply(frame,learningRate=learningRate)
-    # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-    # res = cv2.morphologyEx(fgmask, cv2.MORPH_OPEN, kernel)
-
     # Apply the Model to a Frame
     kernel = np.ones((3, 3), np.uint8)
     fgmask = cv2.erode(fgmask, kernel, iterations=1)
@@ -37,6 +49,7 @@ def removeBG(frame):
 # Camera
 camera = cv2.VideoCapture(0)
 camera.set(10,200)
+n = 0
 
 while camera.isOpened():
     ret, frame = camera.read()
@@ -48,24 +61,15 @@ while camera.isOpened():
 
     #  Main Operation
     if isBgCaptured == 1:
-
     	# Remove Background + # Clip the ROI
         img = removeBG(frame)
         img = img[0:int(cap_region_y_end * frame.shape[0]),
                     int(cap_region_x_begin * frame.shape[1]):frame.shape[1]]
-        cv2.imshow('mask', img)
-
         # Convert the Image into a Binary Image
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         blur = cv2.GaussianBlur(gray, (blurValue, blurValue), 0)
-        cv2.imshow('blur', blur)
-        ret, thresh = cv2.threshold(blur, threshold, 255, cv2.THRESH_BINARY)
-        cv2.imshow('ori', thresh)
-
-        # Save Image      
-        # TODO
-        
-        cv2.imshow('output', drawing)
+        _ ,img_bw = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        cv2.imshow('blur', img_bw)
 
     # Keyboard Operations
     k = cv2.waitKey(10)
@@ -77,8 +81,9 @@ while camera.isOpened():
         isBgCaptured = 1
         print( '* Background Captured')
 
-    elif k == ord('r'):  # Press 'r' to Reset the Background
-        bgModel = None
-        triggerSwitch = False
-        isBgCaptured = 0
-        print ('* Reset BackGround')
+    elif k == ord('x'):  # Press 'r' to Reset the Background
+        cv2.imshow('got this', img_bw)
+        img_path = OUTPUT_TEMPLATE.format(n)
+        cv2.imwrite(img_path, img_bw)
+        n += 1
+        print ('* got image {}'.format(img_path))
