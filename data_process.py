@@ -36,6 +36,7 @@ def convex_hull_classifier(filtered_img):
     # Calculate the number of defects
     l = 0
 
+    defect_distances = []
     for i in range(defects.shape[0]):
         s,e,f,d = defects[i,0]
         start = tuple(approx[s][0])
@@ -60,11 +61,13 @@ def convex_hull_classifier(filtered_img):
 
         # ignore angles > 90 and ignore points very close to convex hull(they generally come due to noise)
         if angle <= 90 and d>30:
+            defect_distances.append(d)
             l += 1
     l+=1
 
     # features for SVM: # of defects; area ratio; distance bw point and convex hull 
-    return l, arearatio, d
+    average_d = sum(defect_distances) / len(defect_distances)
+    return l, arearatio, average_d
 
 
 if __name__ == '__main__':
