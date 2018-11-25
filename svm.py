@@ -1,5 +1,6 @@
 import pandas as pd
 from sklearn import svm
+from evaluations import Evaluation
 
 df_training = pd.read_csv("training_data.txt")
 train_data, train_label = df_training.loc[:, df_training.columns != 'label'], df_training['label']
@@ -11,4 +12,7 @@ test_data, test_label = df_testing.loc[:,df_testing.columns != 'label'], df_test
 clf = svm.SVC()
 y_pred = clf.fit(train_data, train_label)
 predictions = clf.predict(test_data)
+
+evaluationdata = Evaluation(predictions, test_label)
 print(predictions)
+print(evaluationdata.getF1())
