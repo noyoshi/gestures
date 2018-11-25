@@ -5,11 +5,12 @@ import math
 import sys
 import os
 
+n = 0
 if len(sys.argv) < 3:
     print("Please give the destination file and file template name next time") 
     sys.exit(1)
 
-dest_dir, file_name = sys.argv[1:]
+dest_dir, file_name = sys.argv[1:3]
 dir_path = os.path.dirname(os.path.realpath(__file__))
 if dest_dir[0] != "/":
     dest_dir = "/" + dest_dir
@@ -23,6 +24,9 @@ x = input()
 x = x.strip().lower()
 if x != "y":
     sys.exit(1)
+
+if len(sys.argv) > 3:
+    n = int(sys.argv[3])
 
 # Global Parameters
 cap_region_x_begin = 0.5  	# Start Point / Total Width
@@ -49,7 +53,6 @@ def removeBG(frame):
 # Camera
 camera = cv2.VideoCapture(0)
 camera.set(10,200)
-n = 0
 
 while camera.isOpened():
     ret, frame = camera.read()
