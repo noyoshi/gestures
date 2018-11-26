@@ -9,7 +9,6 @@ def convex_hull_classifier(filtered_img):
     _,contours,hierarchy= cv2.findContours(filtered_img,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     
     if len(contours) == 0:
-        print("im guna return now")
         return
 
     # Get the max contour (hand)
@@ -66,18 +65,23 @@ def convex_hull_classifier(filtered_img):
     l+=1
 
     # features for SVM: # of defects; area ratio; distance bw point and convex hull 
-    average_d = sum(defect_distances) / len(defect_distances)
+    if defect_distances:
+        average_d = sum(defect_distances) / len(defect_distances)
+    else:
+        average_d = 0
     return l, arearatio, average_d
 
 
 if __name__ == '__main__':
-    datafile = open("data_features_svm.txt", "w")
+    datafile = open("training_data.txt", "w")
     datafile.write("defects,arearatio,distance,label\n")
 
     gestures = ['ok','peace','rockon','shaka','thumbsup']
     for gesture in gestures:
         dirname = "data\\train\\"+gesture
         for imagefile in os.listdir(dirname):
+            if imagefile.startswith('.'):cl
+                continue
             imagefilepath = dirname + "\\" + imagefile
             filtered_img = cv2.imread(imagefilepath,0)
             l, ar, d = convex_hull_classifier(filtered_img)
