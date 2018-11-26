@@ -23,16 +23,15 @@ def removeBG(f, bgModel):
     # Return Frame w BG Removed
     return res
 
-def convex_hull_classifier(filtered_img, og_img):
-    # Find contours
-    _,contours,hierarchy= cv2.findContours(filtered_img,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-    
+def extract_features(filtered_img, og_img):
+    _, contours, hierarchy = cv2.findContours(filtered_img, 
+            cv2.RETR_TREE,
+            cv2.CHAIN_APPROX_SIMPLE)
     if len(contours) == 0:
         return
 
-    # Get the max contour (hand)
     cnt = max(contours, key = lambda x: cv2.contourArea(x))
-
+    
     # Math stuff to approximate stuff
     epsilon = 0.0005*cv2.arcLength(cnt,True)
     approx= cv2.approxPolyDP(cnt,epsilon,True)
@@ -53,6 +52,7 @@ def convex_hull_classifier(filtered_img, og_img):
 
     # Calculate the number of defects
     l = 0
+    defect_distances = []
 
     for i in range(defects.shape[0]):
         s,e,f,d = defects[i,0]
@@ -76,19 +76,26 @@ def convex_hull_classifier(filtered_img, og_img):
         # apply cosine rule here
         angle = math.acos((b**2 + c**2 - a**2)/(2*b*c)) * 57
 
-
         # ignore angles > 90 and ignore points very close to convex hull(they generally come due to noise)
         if angle <= 90 and d>30:
+            defect_distances.append(d)
             l += 1
-            cv2.circle(og_img, far, 3, [255,0,0], -1)
 
         #draw lines around hand
         cv2.line(og_img,start, end, [0,255,0], 2)
-
+    if len(defect_distances) == 0:
+        average_d = 0
+    else:
+        average_d = sum(defect_distances) / len(defect_distances)
     l+=1
 
+    return l, arearatio, average_d
+
+def convex_hull_classifier(filtered_img, og_img):
     #print corresponding gestures which are in their ranges
+    l, areacnt, average_d = extract_features(filtered_img, og_img)
     font = cv2.FONT_HERSHEY_SIMPLEX
+
     if l==1:
         if areacnt<2000:
             cv2.putText(og_img,'Put hand in the box',(0,50), font, 2, (0,0,255), 3, cv2.LINE_AA)
@@ -100,17 +107,10 @@ def convex_hull_classifier(filtered_img, og_img):
     elif l==2:
         cv2.putText(og_img,'peace',(0,50), font, 2, (0,0,255), 3, cv2.LINE_AA)
     elif l==3:
-        if ar>2000:
+        if areacnt>2000:
             cv2.putText(og_img,'OK',(0,50), font, 2, (0,0,255), 3, cv2.LINE_AA)
         else:
             cv2.putText(og_img,'Rock On',(0,50), font, 2, (0,0,255), 3, cv2.LINE_AA)   
-    '''
-    elif l==4:
-        cv2.putText(og_img,'4',(0,50), font, 2, (0,0,255), 3, cv2.LINE_AA)
-    elif l==5:
-        cv2.putText(og_img,'5',(0,50), font, 2, (0,0,255), 3, cv2.LINE_AA)
-    ''' 
-
     elif l==6:
         cv2.putText(og_img,'reposition',(0,50), font, 2, (0,0,255), 3, cv2.LINE_AA)
     else :
