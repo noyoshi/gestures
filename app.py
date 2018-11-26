@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import copy
 import math
+from classifers import Classifiers
 
 # TODO get rid of the global variables, put this ito a class??
 
@@ -91,6 +92,11 @@ def extract_features(filtered_img, og_img):
 
     return l, arearatio, average_d
 
+def write_guess(guess, img):
+    """Writes the guess to the image"""
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    cv2.putText(img, guess, (0, 50), font, 2, (0, 0, 255), 3, cv2.LINE_AA)
+
 def convex_hull_classifier(filtered_img, og_img):
     #print corresponding gestures which are in their ranges
     l, areacnt, average_d = extract_features(filtered_img, og_img)
@@ -118,6 +124,11 @@ def convex_hull_classifier(filtered_img, og_img):
 
     cv2.imshow('cont?', og_img)
 
+def make_dataframe(l, arearatio, average_d):
+    df = pd.DataFrame(np.array([l, arearatio, average_d]).reshape(1,1), 
+            columns = ["defects", "arearatio", "distance"])
+    return df
+
 if __name__ == '__main__':
     # Instructions
     # press 'b' to capture the background model (No Hand!)
@@ -142,6 +153,8 @@ if __name__ == '__main__':
     cv2.namedWindow('trackbar')
     cv2.createTrackbar('trh1', 'trackbar', threshold, 100, printThreshold)
 
+    classifiers = Classifiers()
+
     while camera.isOpened():
         ret, frame = camera.read()
         threshold = cv2.getTrackbarPos('trh1', 'trackbar')
@@ -165,8 +178,12 @@ if __name__ == '__main__':
             _ ,img_bw = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
             cv2.imshow('blur', img_bw)
 
-            # Run the classifiers? TODO implement 2 more
-            convex_hull_classifier(img_bw, img)
+            # Extract the features from the filtered image
+            l, arearatio, average_d = extract_features(filtered_img, og_img) 
+            # Make the data frame (for the models)
+            data_frame = make_dataframe(l, arearatio, average_d)
+            guess = classifiers.make_guess(data_frame)
+            write_guess(guess, og_img)
 
         k = cv2.waitKey(10)
         if k == 27: # Press ESC to Exit

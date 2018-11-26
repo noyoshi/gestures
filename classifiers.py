@@ -1,3 +1,4 @@
+import collections
 import pickle
 import pandas as pd
 
@@ -47,12 +48,7 @@ class Classifiers(object):
     
     def evaluate_models(self):
         """Evaluates the models"""
-        if not self.models_trained:
-            self.train_models()
-
-        if not self.data_loaded: 
-            self.load_training_data()
-
+        self.check_init() 
         for name, model in self.models:
             predictions = model.predict(self.test_data)
             eval_data = Evaluation(predictions, self.test_label)   
@@ -64,6 +60,26 @@ class Classifiers(object):
             print("\tTrue Gestures: ")
             print("\t" + ', '.join(self.test_label))
             print("\tF1: {}".format(f1))
+
+    def check_init(self):
+        """Checks to see if the data is loaded into the models etc"""
+        if not self.models_trained:
+            self.train_models()
+
+        if not self.data_loaded: 
+            self.load_training_data()
+
+    def make_guess(self, df):
+        """Make a prediction based on data frame"""
+        self.check_init() 
+        guesses = collections.Counter()
+        for name, model in self.models:
+            predictions = model.predict(df)
+            prediction = predictions[0]
+            guesses[prediction] += 1
+        # Return the most common prediction TODO make this more sophisticated?
+        return guesses.most_common(1)[0]
+
 
 if __name__ == '__main__':
     c = Classifiers()
