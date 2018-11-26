@@ -38,15 +38,45 @@ def removeBG(frame):
     # Return Frame w BG Removed
     return res
 
+# Function Calculates ANgle Between Two Fingertips
+def innerAngle(px1, py1, px2, py2, cx1, cy1):
+    dist1 = math.sqrt(  (px1-cx1)*(px1-cx1) + (py1-cy1)*(py1-cy1) )
+    dist2 = math.sqrt(  (px2-cx1)*(px2-cx1) + (py2-cy1)*(py2-cy1) )
+
+    Ax = Ay = Bx = By = 0
+
+    # Find closest point to C  
+    Cx = cx1
+    Cy = cy1
+    if dist1 < dist2: 
+        Bx = px1
+        By = py1
+        Ax = px2
+        Ay = py2
+    else:
+        Bx = px2
+        By = py2
+        Ax = px1
+        Ay = py1
+
+    Q1 = Cx - Ax
+    Q2 = Cy - Ay
+    P1 = Bx - Ax
+    P2 = By - Ay
+
+
+    A = math.acos( (P1*Q1 + P2*Q2) / ( math.sqrt(P1*P1+P2*P2) * math.sqrt(Q1*Q1+Q2*Q2) ) )
+
+    return A*180/np.pi
+
 # Function Returns Bool for if Valid and Finger Count
 def calculateFingers(res,drawing):
 
     # Convexity: Create Hull and Detect Defects
     hull = cv2.convexHull(res, returnPoints=False)
-    if len(hull) > 3:
+    if len(hull) > 2:
         defects = cv2.convexityDefects(res, hull)
-        if type(defects) != type(None):  # avoid crashing.   (BUG not found)
-
+        if type(defects) != type(None):
             cnt = 0
             for i in range(defects.shape[0]):  # calculate the angle
                 s, e, f, d = defects[i][0]
@@ -60,7 +90,7 @@ def calculateFingers(res,drawing):
                 if angle <= math.pi / 2:  # angle less than 90 degree, treat as fingers
                     cnt += 1
                     cv2.circle(drawing, far, 8, [211, 84, 0], -1)
-            return True, cnt
+            return True, cnt+1
     return False, 0
 
 
@@ -120,6 +150,8 @@ while camera.isOpened():
             isFinishCal,cnt = calculateFingers(res,drawing)
             
             # TODO: Do Something Here
+            print(chr(27) + "[2J")
+            print('Finger Count:', cnt)
                     
 
         cv2.imshow('output', drawing)
