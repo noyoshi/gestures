@@ -2,7 +2,8 @@ import cv2
 import numpy as np
 import copy
 import math
-from classifers import Classifiers
+import pandas as pd
+from classifiers import Classifiers
 
 # TODO get rid of the global variables, put this ito a class??
 
@@ -83,7 +84,7 @@ def extract_features(filtered_img, og_img):
             l += 1
 
         #draw lines around hand
-        cv2.line(og_img,start, end, [0,255,0], 2)
+        cv2.line(filtered_img, start, end, [0,255,0], 2)
     if len(defect_distances) == 0:
         average_d = 0
     else:
@@ -95,6 +96,7 @@ def extract_features(filtered_img, og_img):
 def write_guess(guess, img):
     """Writes the guess to the image"""
     font = cv2.FONT_HERSHEY_SIMPLEX
+    print(guess)
     cv2.putText(img, guess, (0, 50), font, 2, (0, 0, 255), 3, cv2.LINE_AA)
 
 def convex_hull_classifier(filtered_img, og_img):
@@ -125,7 +127,7 @@ def convex_hull_classifier(filtered_img, og_img):
     cv2.imshow('cont?', og_img)
 
 def make_dataframe(l, arearatio, average_d):
-    df = pd.DataFrame(np.array([l, arearatio, average_d]).reshape(1,1), 
+    df = pd.DataFrame(np.array([l, arearatio, average_d]).reshape(1,3), 
             columns = ["defects", "arearatio", "distance"])
     return df
 
@@ -179,11 +181,11 @@ if __name__ == '__main__':
             cv2.imshow('blur', img_bw)
 
             # Extract the features from the filtered image
-            l, arearatio, average_d = extract_features(filtered_img, og_img) 
+            l, arearatio, average_d = extract_features(img_bw, img) 
             # Make the data frame (for the models)
             data_frame = make_dataframe(l, arearatio, average_d)
             guess = classifiers.make_guess(data_frame)
-            write_guess(guess, og_img)
+            write_guess(guess[0], img_bw)
 
         k = cv2.waitKey(10)
         if k == 27: # Press ESC to Exit
