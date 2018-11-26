@@ -30,7 +30,7 @@ def extract_features(filtered_img, og_img):
             cv2.RETR_TREE,
             cv2.CHAIN_APPROX_SIMPLE)
     if len(contours) == 0:
-        return
+        return 0, 0, 0 
 
     cnt = max(contours, key = lambda x: cv2.contourArea(x))
     
@@ -91,14 +91,9 @@ def extract_features(filtered_img, og_img):
         average_d = sum(defect_distances) / len(defect_distances)
     l+=1
 
-    return l, arearatio, average_d
+    return l, arearatio, average_d   
 
-def write_guess(guess, img):
-    """Writes the guess to the image"""
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    print(guess)
-    cv2.putText(img, guess, (0, 50), font, 2, (0, 0, 255), 3, cv2.LINE_AA)
-
+'''
 def convex_hull_classifier(filtered_img, og_img):
     #print corresponding gestures which are in their ranges
     l, areacnt, average_d = extract_features(filtered_img, og_img)
@@ -125,6 +120,7 @@ def convex_hull_classifier(filtered_img, og_img):
         cv2.putText(og_img,'reposition',(10,50), font, 2, (0,0,255), 3, cv2.LINE_AA)
 
     cv2.imshow('cont?', og_img)
+'''
 
 def make_dataframe(l, arearatio, average_d):
     df = pd.DataFrame(np.array([l, arearatio, average_d]).reshape(1,3), 
@@ -185,7 +181,11 @@ if __name__ == '__main__':
             # Make the data frame (for the models)
             data_frame = make_dataframe(l, arearatio, average_d)
             guess = classifiers.make_guess(data_frame)
-            write_guess(guess[0], img_bw)
+            #write_guess(guess[0], img_bw)
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            #print(guess)
+            cv2.putText(img, guess[0], (0, 50), font, 2, (0, 0, 255), 3, cv2.LINE_AA)
+            cv2.imshow('image', img)
 
         k = cv2.waitKey(10)
         if k == 27: # Press ESC to Exit
