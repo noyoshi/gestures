@@ -30,7 +30,7 @@ def extract_features(filtered_img, og_img):
             cv2.RETR_TREE,
             cv2.CHAIN_APPROX_SIMPLE)
     if len(contours) == 0:
-        return
+        return 0, 0, 0 
 
     cnt = max(contours, key = lambda x: cv2.contourArea(x))
     
