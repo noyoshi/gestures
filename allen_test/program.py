@@ -74,6 +74,7 @@ def calculateFingers(res,drawing):
 
     # Convexity: Create Hull and Detect Defects
     hull = cv2.convexHull(res, returnPoints=False)
+    finger_points = set()
     if len(hull) > 2:
         defects = cv2.convexityDefects(res, hull)
         if type(defects) != type(None):
@@ -89,7 +90,12 @@ def calculateFingers(res,drawing):
                 angle = math.acos((b ** 2 + c ** 2 - a ** 2) / (2 * b * c))  # cosine theorem
                 if angle <= math.pi / 2:  # angle less than 90 degree, treat as fingers
                     cnt += 1
-                    cv2.circle(drawing, far, 8, [211, 84, 0], -1)
+                    cv2.circle(drawing, start, 8, [211, 84, 0], -1)
+                    finger_points.add(start)
+                    if end not in finger_points:
+                        cv2.circle(drawing, end, 8, [84, 211, 0], -1)
+                        finger_points.add(end)
+
             return True, cnt+1
     return False, 0
 
