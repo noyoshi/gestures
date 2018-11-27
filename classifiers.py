@@ -5,6 +5,7 @@ import pandas as pd
 from sklearn import svm
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import VotingClassifier
 from evaluations import Evaluation
 
 class Classifiers(object):
@@ -34,11 +35,11 @@ class Classifiers(object):
         self.test_data, self.test_label = df_testing.loc[:,df_testing.columns != 'label'], df_testing['label']
         self.data_loaded = True
     
-    def train_models(self):
+    def train(self):
         """Trains all the models"""
         if not self.data_loaded: 
             self.load_training_data()
-
+        
         for name, model in self.models:
             # Train and save the model
             model.fit(self.train_data, self.train_label)
@@ -60,26 +61,27 @@ class Classifiers(object):
             print("\tTrue Gestures: ")
             print("\t" + ', '.join(self.test_label))
             print("\tF1: {}".format(f1))
-
+        
     def check_init(self):
         """Checks to see if the data is loaded into the models etc"""
-        if not self.models_trained:
-            self.train_models()
-
         if not self.data_loaded: 
             self.load_training_data()
+
+        if not self.models_trained:
+            self.train()
 
     def make_guess(self, df):
         """Make a prediction based on data frame"""
         self.check_init() 
+
+        # Using the three models and doing manual voting
         guesses = collections.Counter()
         for name, model in self.models:
             predictions = model.predict(df)
             prediction = predictions[0]
             guesses[prediction] += 1
-        # Return the most common prediction TODO make this more sophisticated?
-        return guesses.most_common(1)[0]
 
+        return guesses.most_common(1)[0]
 
 if __name__ == '__main__':
     c = Classifiers()

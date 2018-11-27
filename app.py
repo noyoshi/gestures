@@ -25,15 +25,17 @@ def removeBG(f, bgModel):
     # Return Frame w BG Removed
     return res
 
-def extract_features(filtered_img, og_img):
+def extract_features(filtered_img, og_img, drawing):
     _, contours, hierarchy = cv2.findContours(filtered_img, 
             cv2.RETR_TREE,
             cv2.CHAIN_APPROX_SIMPLE)
+
     if len(contours) == 0:
         return 0, 0, 0 
 
     cnt = max(contours, key = lambda x: cv2.contourArea(x))
     
+    ctr = np.array(cnt).reshape((-1,1,2)).astype(np.int32)
     # Math stuff to approximate stuff
     epsilon = 0.0005*cv2.arcLength(cnt,True)
     approx= cv2.approxPolyDP(cnt,epsilon,True)
@@ -45,6 +47,8 @@ def extract_features(filtered_img, og_img):
     areahull = cv2.contourArea(hull)
     areacnt = cv2.contourArea(cnt)
 
+    cv2.drawContours(drawing, [ctr], 0, (0, 255, 0), 2)
+    cv2.drawContours(drawing, [hull], 0, (0, 0, 255), 3)
     # Get the percentage of hull not covered by hand
     arearatio=((areahull-areacnt)/areacnt)*100
 
@@ -61,8 +65,6 @@ def extract_features(filtered_img, og_img):
         start = tuple(approx[s][0])
         end = tuple(approx[e][0])
         far = tuple(approx[f][0])
-        pt= (100,180)
-
 
         # find length of all sides of triangle
         a = math.sqrt((end[0] - start[0])**2 + (end[1] - start[1])**2)
@@ -73,54 +75,24 @@ def extract_features(filtered_img, og_img):
 
         #distance between point and convex hull
         d=(2*ar)/a
-        # print(ar, d)
 
         # apply cosine rule here
         angle = math.acos((b**2 + c**2 - a**2)/(2*b*c)) * 57
 
         # ignore angles > 90 and ignore points very close to convex hull(they generally come due to noise)
-        if angle <= 90 and d>30:
+        if angle <= 110 and d>30:
+            cv2.circle(drawing, start, 8, [211, 84, 0], -1)
+            cv2.circle(drawing, end, 8, [84, 211, 0], -1)
             defect_distances.append(d)
             l += 1
 
-        #draw lines around hand
-        cv2.line(filtered_img, start, end, [0,255,0], 2)
     if len(defect_distances) == 0:
         average_d = 0
     else:
         average_d = sum(defect_distances) / len(defect_distances)
     l+=1
 
-    return l, arearatio, average_d   
-
-'''
-def convex_hull_classifier(filtered_img, og_img):
-    #print corresponding gestures which are in their ranges
-    l, areacnt, average_d = extract_features(filtered_img, og_img)
-    font = cv2.FONT_HERSHEY_SIMPLEX
-
-    if l==1:
-        if areacnt<2000:
-            cv2.putText(og_img,'Put hand in the box',(0,50), font, 2, (0,0,255), 3, cv2.LINE_AA)
-        else:
-            if d<15:
-                cv2.putText(og_img,'good job!',(0,50), font, 2, (0,0,255), 3, cv2.LINE_AA)
-            else:
-                cv2.putText(og_img,'shaka',(0,50), font, 2, (0,0,255), 3, cv2.LINE_AA)
-    elif l==2:
-        cv2.putText(og_img,'peace',(0,50), font, 2, (0,0,255), 3, cv2.LINE_AA)
-    elif l==3:
-        if areacnt>2000:
-            cv2.putText(og_img,'OK',(0,50), font, 2, (0,0,255), 3, cv2.LINE_AA)
-        else:
-            cv2.putText(og_img,'Rock On',(0,50), font, 2, (0,0,255), 3, cv2.LINE_AA)   
-    elif l==6:
-        cv2.putText(og_img,'reposition',(0,50), font, 2, (0,0,255), 3, cv2.LINE_AA)
-    else :
-        cv2.putText(og_img,'reposition',(10,50), font, 2, (0,0,255), 3, cv2.LINE_AA)
-
-    cv2.imshow('cont?', og_img)
-'''
+    return l, arearatio, average_d 
 
 def make_dataframe(l, arearatio, average_d):
     df = pd.DataFrame(np.array([l, arearatio, average_d]).reshape(1,3), 
@@ -150,7 +122,6 @@ if __name__ == '__main__':
     camera.set(10,200)
     cv2.namedWindow('trackbar')
     cv2.createTrackbar('trh1', 'trackbar', threshold, 100, printThreshold)
-
     classifiers = Classifiers()
 
     while camera.isOpened():
@@ -158,7 +129,6 @@ if __name__ == '__main__':
         threshold = cv2.getTrackbarPos('trh1', 'trackbar')
         frame = cv2.bilateralFilter(frame, 5, 50, 100)  # smoothing filter
         frame = cv2.flip(frame, 1)  # flip the frame horizontally
-        # TODO actually get the ROI and dont do this computation twice
         cv2.rectangle(frame, (int(cap_region_x_begin * frame.shape[1]), 0),
                      (frame.shape[1], int(cap_region_y_end * frame.shape[0])), (255, 0, 0), 2)
         cv2.imshow('original', frame)
@@ -174,18 +144,19 @@ if __name__ == '__main__':
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             blur = cv2.GaussianBlur(gray, (blurValue, blurValue), 0)
             _ ,img_bw = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-            cv2.imshow('blur', img_bw)
 
             # Extract the features from the filtered image
-            l, arearatio, average_d = extract_features(img_bw, img) 
+            drawing = np.zeros(img.shape, np.uint8)
+            l, arearatio, average_d = extract_features(img_bw, img, drawing) 
+
             # Make the data frame (for the models)
             data_frame = make_dataframe(l, arearatio, average_d)
             guess = classifiers.make_guess(data_frame)
-            #write_guess(guess[0], img_bw)
+
+            # Writes to the output image
             font = cv2.FONT_HERSHEY_SIMPLEX
-            #print(guess)
-            cv2.putText(img, guess[0], (0, 50), font, 2, (0, 0, 255), 3, cv2.LINE_AA)
-            cv2.imshow('image', img)
+            cv2.putText(drawing, guess[0], (0, 50), font, 2, (0, 0, 255), 3, cv2.LINE_AA)
+            cv2.imshow('blur', drawing)
 
         k = cv2.waitKey(10)
         if k == 27: # Press ESC to Exit
