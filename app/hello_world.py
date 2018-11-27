@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-import cv2
-import sys
 import argparse
+import cv2
 
 def hello(file_name):
     img = cv2.imread(file_name, 1)
@@ -15,4 +14,3 @@ if __name__ == '__main__':
     PARSER.add_argument(dest='image_file')
     ARGS = PARSER.parse_args()
     hello(ARGS.image_file)
-

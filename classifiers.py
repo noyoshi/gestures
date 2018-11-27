@@ -1,5 +1,4 @@
 import collections
-import pickle
 import pandas as pd
 
 from sklearn import svm
@@ -14,7 +13,10 @@ class Classifiers(object):
         self.svm = svm.SVC()
         self.knn = KNeighborsClassifier(n_neighbors=6)
         self.cart = DecisionTreeClassifier()
-        self.models = [("svm", self.svm), ("knn", self.knn), ("cart", self.cart)]
+        self.models = [
+                ("svm", self.svm), 
+                ("knn", self.knn), 
+                ("cart decision tree", self.cart)]
         
         # Training / evaluating data
         self.train_data = None
@@ -43,7 +45,6 @@ class Classifiers(object):
         for name, model in self.models:
             # Train and save the model
             model.fit(self.train_data, self.train_label)
-            pickle.dump(model, open("models/{}".format(name), "wb"))   
 
         self.models_trained = True
     
@@ -61,7 +62,17 @@ class Classifiers(object):
             print("\tTrue Gestures: ")
             print("\t" + ', '.join(self.test_label))
             print("\tF1: {}".format(f1))
-
+        
+        predictions = self.make_guess(self.test_data, True)
+        eval_data = Evaluation(predictions, self.test_label)
+        print("-"*40)
+        print("\tModel: {}".format("Voting Ensamble Model"))
+        print("\tPredictions: ")
+        print("\t" + ', '.join(predictions))
+        print("\tTrue Gestures: ")
+        print("\t" + ', '.join(self.test_label))
+        print("\tF1: {}".format(f1))
+        
     def check_init(self):
         """Checks to see if the data is loaded into the models etc"""
         if not self.data_loaded: 
@@ -70,18 +81,31 @@ class Classifiers(object):
         if not self.models_trained:
             self.train()
 
-    def make_guess(self, df):
+    def make_guess(self, df, multi=False):
         """Make a prediction based on data frame"""
         self.check_init() 
 
         # Using the three models and doing manual voting
         guesses = collections.Counter()
+        multi_guesses = []
         for name, model in self.models:
             predictions = model.predict(df)
+            if multi:
+                multi_guesses.append(predictions)
+                continue
             prediction = predictions[0]
             guesses[prediction] += 1
 
-        return guesses.most_common(1)[0]
+        if not multi:
+            return guesses.most_common(1)[0]
+
+        preds = []
+        for idx in range(len(multi_guesses[0])):
+            guesses = collections.Counter()
+            for row in range(len(multi_guesses)):
+                guesses[multi_guesses[row][idx]] += 1
+            preds.append(guesses.most_common(1)[0][0])
+        return preds
 
 if __name__ == '__main__':
     c = Classifiers()
