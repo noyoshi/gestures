@@ -1,5 +1,6 @@
 import pandas as pd
 from sklearn.neighbors import KNeighborsClassifier
+from evaluations import Evaluation
 
 df_training = pd.read_csv("training_data.txt")
 train_data, train_label = df_training.loc[:,df_training.columns != 'label'], df_training['label']

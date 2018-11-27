@@ -9,6 +9,6 @@ Allen Duong, Yuhan(Tina) Wu, Noah Yoshida
 - [x] Do preprocessing, if needed
 
 #### Deliverable 2
-- [ ] Feature extraction
-- [ ] Selection
-- [ ] Classification
+- [x] Feature extraction
+- [x] Selection
+- [x] Classification

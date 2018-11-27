@@ -61,7 +61,7 @@ class Classifiers(object):
             print("\tTrue Gestures: ")
             print("\t" + ', '.join(self.test_label))
             print("\tF1: {}".format(f1))
-        
+
     def check_init(self):
         """Checks to see if the data is loaded into the models etc"""
         if not self.data_loaded: 
