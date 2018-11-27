@@ -5,8 +5,6 @@ import math
 import pandas as pd
 from classifiers import Classifiers
 
-# TODO get rid of the global variables, put this ito a class??
-
 def printThreshold(thr):
     print("! Changed Threshold to " + str(thr))
 
