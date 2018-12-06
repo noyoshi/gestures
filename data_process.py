@@ -73,14 +73,14 @@ def convex_hull_classifier(filtered_img):
 
 
 if __name__ == '__main__':
-    datafile = open("training_data.txt", "w")
+    datafile = open("testing_data.txt", "w")
     datafile.write("defects,arearatio,distance,label\n")
 
     gestures = ['ok','peace','rockon','shaka','thumbsup']
     for gesture in gestures:
-        dirname = "data\\train\\"+gesture
+        dirname = "data\\test\\"+gesture
         for imagefile in os.listdir(dirname):
-            if imagefile.startswith('.'):cl
+            if imagefile.startswith('.'):
                 continue
             imagefilepath = dirname + "\\" + imagefile
             filtered_img = cv2.imread(imagefilepath,0)
